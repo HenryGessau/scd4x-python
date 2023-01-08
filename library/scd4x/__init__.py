@@ -29,6 +29,11 @@ class SCD4X:
     DEFAULT_I2C_ADDRESS = 0x62
 
     def __init__(self, address=None, quiet=True, device="SCD4X"):
+
+        def q_print(msg: str):
+            if not quiet:
+                print(msg)
+
         self.co2 = 0
         self.temperature = 0
         self.relative_humidity = 0
@@ -38,13 +43,13 @@ class SCD4X:
         self.bus = SMBus(1)
 
         # self.stop_periodic_measurement()
-        serial = self.get_serial_number()
-
-        if not quiet:
-            if serial:
-                print(f"{self.device}, Serial: {serial:06x}")
-            else:
-                print(f"{self.device}, asleep")
+        q_print(f"SCD4X __init__: getting serial number...")
+        try:
+            serial = self.get_serial_number()
+        except OSError:
+            q_print(f"{self.device} not responding")
+        else:
+            q_print(f"{self.device}, Serial: {serial:06x}")
 
     def rdwr(self, command, value=None, response_length=0, delay=0):
         if value is not None:
@@ -173,6 +178,8 @@ class SCD41(SCD4X):
     WAKE_UP = 0x36F6
 
     def __init__(self, address=None, quiet=True):
+        if not quiet:
+            print(f"SCD41 __init__(quiet={quiet}) ...")
         super().__init__(address=address, quiet=quiet, device="SCD41")
 
     def measure_single_shot(self):
@@ -189,16 +196,27 @@ class SCD41(SCD4X):
     def power_down(self):
         self.rdwr(self.POWER_DOWN)
 
-    def wake_up(self):
-        self.rdwr(self.WAKE_UP)
+    def wake_up(self, quiet=True):
+
+        def q_print(msg: str):
+            if not quiet:
+                print(msg)
+
+        q_print(f"SCD41 wake_up(), waking up ...")
+        try:
+            self.rdwr(self.WAKE_UP)
+        except OSError:
+            time.sleep(0.1)
 
         serial = None
         while not serial:
+            q_print(f"SCD41 wake_up(), getting serial number ...")
             serial = self.get_serial_number()  # verify idle state after wake_up command
             if serial:
-                print(f"{self.device}, Serial: {serial:06x}")
+                q_print(f"{self.device}, Serial: {serial:06x}")
             else:
-                print(f"{self.device}, failed to wake up")
+                q_print(f"{self.device}, failed to wake up")
                 time.sleep(0.1)
 
+        q_print(f"SCD41 wake_up(), discard first reading ...")
         self.measure_single_shot()  # first reading using measure_single_shot after waking up should be discarded
