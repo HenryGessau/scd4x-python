@@ -8,7 +8,7 @@ from scd4x import SCD41
 def single_shot_reading(verbose=False, debug=False):
     quiet = not debug
     device = SCD41(quiet=quiet)
-    device.wake_up(quiet=quiet)
+    device.wake_up()
 
     co2, temperature, relative_humidity, timestamp = device.measure_single_shot()
     date = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
@@ -16,7 +16,8 @@ def single_shot_reading(verbose=False, debug=False):
         Time:        {date}
         CO2:         {co2:.0f} PPM
         Temperature: {temperature:.1f}°C
-        Humidity:    {relative_humidity:.1f}% RH""")
+        Humidity:    {relative_humidity:.1f}% RH
+    """)
     if debug or verbose:
         print(msg)
 

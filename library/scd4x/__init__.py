@@ -30,8 +30,10 @@ class SCD4X:
 
     def __init__(self, address=None, quiet=True, device="SCD4X"):
 
+        self.quiet = quiet
+
         def q_print(msg: str):
-            if not quiet:
+            if not self.quiet:
                 print(msg)
 
         self.co2 = 0
@@ -48,8 +50,10 @@ class SCD4X:
             serial = self.get_serial_number()
         except OSError:
             q_print(f"{self.device} not responding")
+            serial = None
         else:
-            q_print(f"{self.device}, Serial: {serial:06x}")
+            q_print(f"{self.device} Serial: {serial:06x}")
+        self.serial = serial
 
     def rdwr(self, command, value=None, response_length=0, delay=0):
         if value is not None:
@@ -194,29 +198,38 @@ class SCD41(SCD4X):
         return temperature, relative_humidity, timestamp
 
     def power_down(self):
-        self.rdwr(self.POWER_DOWN)
-
-    def wake_up(self, quiet=True):
 
         def q_print(msg: str):
-            if not quiet:
-                print(msg)
+            if not self.quiet:
+                print(f"{self.device} power_down(), {msg}")
 
-        q_print(f"SCD41 wake_up(), waking up ...")
+        q_print(f"powering down ...")
+        self.rdwr(self.POWER_DOWN)
+
+    def wake_up(self):
+
+        def q_print(msg: str):
+            if not self.quiet:
+                print(f"{self.device} wake_up(), {msg}")
+
+        q_print(f"waking up ...")
         try:
             self.rdwr(self.WAKE_UP)
         except OSError:
-            time.sleep(0.1)
+            q_print(f"failed to wake up")
+            pass
 
-        serial = None
-        while not serial:
-            q_print(f"SCD41 wake_up(), getting serial number ...")
-            serial = self.get_serial_number()  # verify idle state after wake_up command
-            if serial:
-                q_print(f"{self.device}, Serial: {serial:06x}")
-            else:
-                q_print(f"{self.device}, failed to wake up")
+        time.sleep(0.1)
+
+        while not self.serial:
+            q_print(f"getting serial number ...")
+            try:
+                self.serial = self.get_serial_number()  # verify idle state after wake_up command
+            except OSError:
+                q_print(f"failed to get serial")
                 time.sleep(0.1)
+            if self.serial:
+                q_print(f"Serial: {self.serial:06x}")
 
-        q_print(f"SCD41 wake_up(), discard first reading ...")
+        q_print(f"discard first reading ...")
         self.measure_single_shot()  # first reading using measure_single_shot after waking up should be discarded
