@@ -34,7 +34,7 @@ class SCD4X:
 
         def q_print(msg: str):
             if not self.quiet:
-                print(msg)
+                print(f"SCD4X __init__(), {msg}")
 
         self.co2 = 0
         self.temperature = 0
@@ -45,14 +45,14 @@ class SCD4X:
         self.bus = SMBus(1)
 
         # self.stop_periodic_measurement()
-        q_print(f"SCD4X __init__: getting serial number...")
+        q_print(f"getting serial number...")
         try:
             serial = self.get_serial_number()
         except OSError:
-            q_print(f"{self.device} not responding")
+            q_print(f"not responding")
             serial = None
         else:
-            q_print(f"{self.device} Serial: {serial:06x}")
+            q_print(f"Serial: {serial:06x}")
         self.serial = serial
 
     def rdwr(self, command, value=None, response_length=0, delay=0):
@@ -221,15 +221,17 @@ class SCD41(SCD4X):
 
         time.sleep(0.1)
 
-        while not self.serial:
-            q_print(f"getting serial number ...")
-            try:
-                self.serial = self.get_serial_number()  # verify idle state after wake_up command
-            except OSError:
-                q_print(f"failed to get serial")
-                time.sleep(0.1)
-            if self.serial:
-                q_print(f"Serial: {self.serial:06x}")
+        if not self.serial:
+            for _ in range(20):
+                q_print(f"getting serial number ...")
+                try:
+                    self.serial = self.get_serial_number()  # verify idle state after wake_up command
+                except OSError:
+                    q_print(f"failed to get serial")
+                    time.sleep(0.1)
+                if self.serial:
+                    q_print(f"Serial: {self.serial:06x}")
+                    break
 
         q_print(f"discard first reading ...")
         self.measure_single_shot()  # first reading using measure_single_shot after waking up should be discarded
