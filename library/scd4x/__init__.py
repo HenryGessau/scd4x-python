@@ -61,7 +61,10 @@ class SCD4X:
         else:
             msg_w = i2c_msg.write(self.address, struct.pack(">H", command))
 
-        self.bus.i2c_rdwr(msg_w)
+        try:
+            self.bus.i2c_rdwr(msg_w)
+        except OSError:
+            return []
 
         time.sleep(delay / 1000.0)
 
@@ -125,7 +128,9 @@ class SCD4X:
 
     def get_serial_number(self):
         response = self.rdwr(self.GET_SERIAL_NUMBER, response_length=3, delay=1)
-        return (response[0] << 32) | (response[1] << 16) | response[2]
+        if response:
+            return (response[0] << 32) | (response[1] << 16) | response[2]
+        return 0
 
     def start_periodic_measurement(self, low_power=False):
         if low_power:
