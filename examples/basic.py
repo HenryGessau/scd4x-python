@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from datetime import datetime, timezone
-from library.scd4x import SCD41
+from scd4x import SCD41
 
 
 def main():
