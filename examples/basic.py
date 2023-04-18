@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from datetime import datetime, timezone
-from library.scd4x import SCD4X
+from library.scd4x import SCD41
 
 
 def main():
-    device = SCD4X(quiet=False)
+    device = SCD41(quiet=False)
     device.start_periodic_measurement()
 
     try:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-from scd4x import SCD4X
+from scd4x import SCD41
 
 
 BAR_CHAR = u'\u2588'
@@ -24,7 +24,7 @@ max_co2 = 0
 min_temperature = 1 << 32
 max_temperature = 0
 
-device = SCD4X()
+device = SCD41()
 device.start_periodic_measurement()
 
 try:
@@ -64,7 +64,7 @@ CO2:         {c_bar}
 {c_reading}
 {blank}
 """.format(
-            title="SCD4X Sensor".ljust(BAR_WIDTH + 14, " "),
+            title="SCD41 Sensor".ljust(BAR_WIDTH + 14, " "),
             t_bar=t_bar,
             c_bar=c_bar,
             t_reading=t_reading,

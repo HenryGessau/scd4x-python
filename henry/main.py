@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime
 from textwrap import dedent
 
 from scd4x import SCD41
@@ -11,17 +11,17 @@ def single_shot_reading(verbose=False, debug=False):
     device.wake_up()
 
     co2, temperature, relative_humidity, timestamp = device.measure_single_shot()
-    date = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    date, time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S").split()
     msg = dedent(f"""
-        Time:        {date}
+        Date:        {date}
+        Time:        {time}
         CO2:         {co2:.0f} PPM
         Temperature: {temperature:.1f}°C
         Humidity:    {relative_humidity:.1f}% RH
     """)
-    if debug or verbose:
-        print(msg)
+    print(msg)
 
-    log = f'"{date}","{co2:.0f}","{temperature:.1f}","{relative_humidity:.1f}"\n'
+    log = f'"{date} {time}","{co2:.0f}","{temperature:.1f}","{relative_humidity:.1f}"\n'
     with open("/home/henry/.logs/SCD41.csv", 'a') as f:
         f.write(log)
 
