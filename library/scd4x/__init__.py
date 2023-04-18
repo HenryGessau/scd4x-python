@@ -124,7 +124,7 @@ class SCD4X:
 
     def data_ready(self):
         response = self.rdwr(self.GET_DATA_READY_STATUS, response_length=1, delay=1)
-        return (response & 0x030F) != 0
+        return response and (response[0] & 0x030F) != 0
 
     def get_serial_number(self):
         response = self.rdwr(self.GET_SERIAL_NUMBER, response_length=3, delay=1)
